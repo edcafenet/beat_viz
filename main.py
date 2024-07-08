@@ -1,35 +1,47 @@
-import socket
+
 import pyautogui
-import struct
-import numpy as np
-import random
+import socketserver, threading, time
 
-UDP_IP = "10.205.3.4"
-UDP_PORT = 9876
+class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 
-scaling_x = 1.40
-scaling_y = 1.56
+    def handle(self):
+        data = self.request[0].strip()
+        socket = self.request[1]
+        current_thread = threading.current_thread()
+        print("{}: client: {}, wrote: {}".format(current_thread.name, self.client_address, data))
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-sock.bind((UDP_IP, UDP_PORT))
-
-while True:
-    try:
-        data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
         data_string = list(data.decode()[1:-1].split(','))
         data_int = [int(round(float(i),1)*10) for i in data_string]
+
         corrected_x = data_int[0] + 338
         corrected_y = -data_int[1] + 124
 
+        scaling_x = 0.70
+        scaling_y = 0.41
+
         scaled_x = corrected_x * scaling_x
-        scaled_y = corrected_y * scaling_y
+        scaled_y = corrected_y * scaling_y        
 
         pyautogui.moveTo(scaled_x, scaled_y)
-        #pyautogui.click()
-        #pyautogui.mouseDown()
+        
+        socket.sendto(data.upper(), self.client_address)
 
+class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
+    pass
 
-        # pyautogui.drag(random.randint(0, 10), random.randint(0, 10), 1, button='left') 
+if __name__ == "__main__":
+    UDP_IP = "10.205.3.229"
+    UDP_PORT = 9876
 
-    except KeyboardInterrupt:
-        pass
+    server = ThreadedUDPServer((UDP_IP, UDP_PORT), ThreadedUDPRequestHandler)
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.daemon = True
+
+    try:
+        server_thread.start()
+        print("Server started at {} port {}".format(UDP_IP, UDP_PORT))
+        while True: time.sleep(100)
+    except (KeyboardInterrupt, SystemExit):
+        server.shutdown()
+        server.server_close()
+        exit()
