@@ -1,5 +1,10 @@
 import pyautogui
 import socketserver, threading, time
+from threading import Thread
+from fft_analyzer import fft_analyzer
+import random
+
+fft = fft_analyzer()
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 
@@ -21,13 +26,14 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         scaled_x = corrected_x * scaling_x
         scaled_y = corrected_y * scaling_y        
 
-        pyautogui.moveTo(scaled_x, scaled_y)
-        pyautogui.mouseDown()
-
+        pyautogui.dragTo(scaled_x, scaled_y, button='left')
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
+
+def run_fft():
+    fft.run()
 
 if __name__ == "__main__":
     UDP_IP = "10.205.3.4"
@@ -36,11 +42,14 @@ if __name__ == "__main__":
     server = ThreadedUDPServer((UDP_IP, UDP_PORT), ThreadedUDPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
+    fft_thread = threading.Thread(target=run_fft)
 
     try:
         server_thread.start()
         print("Server started at {} port {}".format(UDP_IP, UDP_PORT))
-        while True: time.sleep(100)
+        fft_thread.start()
+        print("FFT started")
+
     except (KeyboardInterrupt, SystemExit):
         server.shutdown()
         server.server_close()
