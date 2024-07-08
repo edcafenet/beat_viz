@@ -52,7 +52,7 @@ class fft_analyzer:
                         FFT_window_size_ms  = 60,    # Window size used for the FFT transform
                         updates_per_second  = 500,   # How often to read the audio stream for new data
                         smoothing_length_ms = 50,    # Apply some temporal smoothing to reduce noisy features
-                        n_frequency_bins = 16,        # The FFT features are grouped in bins
+                        n_frequency_bins = 8,        # The FFT features are grouped in bins
                         visualize = 0,               # Visualize the FFT features with PyGame
                         verbose   = 0,    # Print running statistics (latency, fps, ...)
                         height    = 450,     # Height, in pixels, of the visualizer window,
@@ -69,10 +69,11 @@ class fft_analyzer:
                 self.raw_fftx, self.raw_fft, self.binned_fftx, self.binned_fft = ear.get_audio_features()
                 fft_samples += 1
 
-                if self.binned_fft[1] > 5.0:
+                if self.binned_fft[1] > 1.0:
                     jump = round(self.binned_fft[1])
                     pyautogui.dragTo(pyautogui.position()[0]+random.randrange(-jump,jump),pyautogui.position()[1]+random.randrange(-jump,jump), button='left')
-   
+                    pyautogui.mouseDown()
+
                 #    print(f"Got fft_features #{fft_samples} of shape {raw_fft.shape}")
             elif args.sleep_between_frames:
                 time.sleep(((1./fps)-(time.time()-last_update)) * 0.99)

@@ -26,7 +26,7 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         scaled_x = corrected_x * scaling_x
         scaled_y = corrected_y * scaling_y        
 
-        pyautogui.dragTo(scaled_x, scaled_y, button='left')
+        #pyautogui.dragTo(scaled_x, scaled_y, button='left')
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
@@ -36,7 +36,7 @@ def run_fft():
     fft.run()
 
 if __name__ == "__main__":
-    UDP_IP = "10.205.3.4"
+    UDP_IP = "172.16.13.200"
     UDP_PORT = 9876
 
     server = ThreadedUDPServer((UDP_IP, UDP_PORT), ThreadedUDPRequestHandler)
