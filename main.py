@@ -1,4 +1,3 @@
-
 import pyautogui
 import socketserver, threading, time
 
@@ -23,14 +22,15 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         scaled_y = corrected_y * scaling_y        
 
         pyautogui.moveTo(scaled_x, scaled_y)
-        
+        pyautogui.mouseDown()
+
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
 
 if __name__ == "__main__":
-    UDP_IP = "10.205.3.229"
+    UDP_IP = "10.205.3.4"
     UDP_PORT = 9876
 
     server = ThreadedUDPServer((UDP_IP, UDP_PORT), ThreadedUDPRequestHandler)
