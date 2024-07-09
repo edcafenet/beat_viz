@@ -3,6 +3,7 @@ import socketserver, threading, time
 from threading import Thread
 from fft_analyzer import fft_analyzer
 import random
+import argparse
 
 fft = fft_analyzer()
 
@@ -26,29 +27,35 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         scaled_x = corrected_x * scaling_x
         scaled_y = corrected_y * scaling_y        
 
-        #pyautogui.dragTo(scaled_x, scaled_y, button='left')
+        pyautogui.moveTo(scaled_x, scaled_y)
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
 
-def run_fft():
-    fft.run()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--device', type=int, default=2, dest='device',
+                        help='pyaudio (portaudio) device index')
+    parser.add_argument('--ip', type=str, default="localhost", dest='ip',
+                        help='UDP Server IP')
+    parser.add_argument('--port', type=int, default=9876, dest='port',
+                        help='UDP Serverr Port')
+    parser.add_argument('--verbose', action='store_true')
+
+    return parser.parse_args()
 
 if __name__ == "__main__":
-    UDP_IP = "172.16.13.200"
-    UDP_PORT = 9876
 
-    server = ThreadedUDPServer((UDP_IP, UDP_PORT), ThreadedUDPRequestHandler)
+    args = parse_args()
+    server = ThreadedUDPServer((args.ip, args.port), ThreadedUDPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
-    fft_thread = threading.Thread(target=run_fft)
 
     try:
         server_thread.start()
-        print("Server started at {} port {}".format(UDP_IP, UDP_PORT))
-        fft_thread.start()
-        print("FFT started")
+        print("Server started at {} port {}".format(args.ip, args.port))
+        fft.run()
 
     except (KeyboardInterrupt, SystemExit):
         server.shutdown()
