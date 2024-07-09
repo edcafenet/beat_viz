@@ -13,7 +13,6 @@ class fft_analyzer:
 
     random_increment_x = 0
     random_increment_y = 0
-
     current_mouse_position = [0,0]
 
     def __init__(self, sound_device_index, visualizer):
@@ -27,7 +26,6 @@ class fft_analyzer:
             return False
 
     def run(self):
-     
         ear = Stream_Analyzer(
                         device = self.sound_device_index, # Pyaudio (portaudio) device index, defaults to first mic input
                         rate   = None,               # Audio samplerate, None uses the default source settings
@@ -56,7 +54,7 @@ class fft_analyzer:
                     self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
                     self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
                     
-                    jump = round(self.binned_fft[0]/2)
+                    jump = round(self.binned_fft[0]/4)
                     self.random_increment_x = random.randrange(-jump,jump)
                     self.random_increment_y = random.randrange(-jump,jump)
 
