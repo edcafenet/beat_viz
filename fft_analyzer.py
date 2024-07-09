@@ -45,10 +45,3 @@ class fft_analyzer:
                     pyautogui.mouseDown()
                     pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump), duration=1)
                     pyautogui.mouseUp()
-
-                #    print(f"Got fft_features #{fft_samples} of shape {raw_fft.shape}")
-            # elif args.sleep_between_frames:
-            #     time.sleep(((1./fps)-(time.time()-last_update)) * 0.99)
-
-
-
