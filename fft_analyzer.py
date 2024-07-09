@@ -43,7 +43,7 @@ class fft_analyzer:
                 if self.beat_present(20):
                     jump = round(self.binned_fft[0])
                     pyautogui.mouseDown()
-                    pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump))
+                    pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump), duration=1)
                     pyautogui.mouseUp()
 
                 #    print(f"Got fft_features #{fft_samples} of shape {raw_fft.shape}")
