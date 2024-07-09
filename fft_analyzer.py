@@ -41,7 +41,8 @@ class fft_analyzer:
                 fft_samples += 1
 
                 if self.beat_present(20):
-                    jump = round(self.binned_fft[0])
+                    intensity = round(self.binned_fft[0]) / 10
+                    jump = 10
                     pyautogui.mouseDown()
-                    pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump), duration=1)
+                    pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump), duration=intensity)
                     pyautogui.mouseUp()
