@@ -8,9 +8,13 @@ class fft_analyzer:
     raw_fft = None
     binned_fftx = None
     binned_fft = None
+    sound_device_index = None
 
-    def beat_present(self, threshold):
-        if self.binned_fft[0] > threshold:
+    def __init__(self, sound_device_index):
+        self.sound_device_index = sound_device_index
+
+    def beat_present(self, bin_id, threshold):
+        if self.binned_fft[bin_id] > threshold:
             return True
         else:
             return False
@@ -18,7 +22,7 @@ class fft_analyzer:
     def run(self):
      
         ear = Stream_Analyzer(
-                        device = 4,                  # Pyaudio (portaudio) device index, defaults to first mic input
+                        device = self.sound_device_index, # Pyaudio (portaudio) device index, defaults to first mic input
                         rate   = None,               # Audio samplerate, None uses the default source settings
                         FFT_window_size_ms  = 60,    # Window size used for the FFT transform
                         updates_per_second  = 500,   # How often to read the audio stream for new data
@@ -40,7 +44,7 @@ class fft_analyzer:
                 self.raw_fftx, self.raw_fft, self.binned_fftx, self.binned_fft = ear.get_audio_features()
                 fft_samples += 1
 
-                if self.beat_present(20):
+                if self.beat_present(0, 20):
                     jump = round(self.binned_fft[0]) 
                     pyautogui.mouseDown()
                     pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump))

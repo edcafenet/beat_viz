@@ -5,8 +5,6 @@ from fft_analyzer import fft_analyzer
 import random
 import argparse
 
-fft = fft_analyzer()
-
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
@@ -51,6 +49,8 @@ if __name__ == "__main__":
     server = ThreadedUDPServer((args.ip, args.port), ThreadedUDPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
+
+    fft = fft_analyzer(args.device)
 
     try:
         server_thread.start()
