@@ -39,7 +39,7 @@ def parse_args():
                         help='UDP Server IP')
     parser.add_argument('--port', type=int, default=9876, dest='port',
                         help='UDP Serverr Port')
-    parser.add_argument('--verbose', action='store_true')
+    parser.add_argument('--visualizer', action='store_true')
 
     return parser.parse_args()
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
 
-    fft = fft_analyzer(args.device)
+    fft = fft_analyzer(args.device, args.visualizer)
 
     try:
         server_thread.start()
