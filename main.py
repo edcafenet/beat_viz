@@ -16,14 +16,17 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         data_string = list(data.decode()[1:-1].split(','))
         data_int = [int(round(float(i),1)*10) for i in data_string]
 
-        corrected_x = data_int[0] + 338
-        corrected_y = -data_int[1] + 124
+        corrected_x = data_int[0] + 225 
+        corrected_y = -data_int[1] + 79
 
-        scaling_x = 0.70
-        scaling_y = 0.41
+        scaling_x = 0.52
+        scaling_y = 0.52
 
-        scaled_x = corrected_x * scaling_x
-        scaled_y = corrected_y * scaling_y        
+        scaled_y = (corrected_y * scaling_y)          
+        scaled_x = (corrected_x * scaling_x)
+
+        scaled_y = scaled_y + 120
+        scaled_x = scaled_x 
 
         pyautogui.moveTo(scaled_x, scaled_y)
         socket.sendto(data.upper(), self.client_address)
