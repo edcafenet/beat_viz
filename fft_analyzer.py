@@ -9,25 +9,14 @@ class fft_analyzer:
     binned_fftx = None
     binned_fft = None
 
-    def convert_window_ratio(self, window_ratio):
-        if '/' in window_ratio:
-            dividend, divisor = window_ratio.split('/')
-            try:
-                float_ratio = float(dividend) / float(divisor)
-            except:
-                raise ValueError('window_ratio should be in the format: float/float')
-            return float_ratio
-        raise ValueError('window_ratio should be in the format: float/float')
-
-    def beat_present(self):
-        if self.binned_fft[1] > 10.0:
+    def beat_present(self, threshold):
+        if self.binned_fft[0] > threshold:
             return True
         else:
             return False
 
     def run(self):
-        window_ratio = self.convert_window_ratio("24/9")
-
+     
         ear = Stream_Analyzer(
                         device = 0,                  # Pyaudio (portaudio) device index, defaults to first mic input
                         rate   = None,               # Audio samplerate, None uses the default source settings
@@ -51,8 +40,8 @@ class fft_analyzer:
                 self.raw_fftx, self.raw_fft, self.binned_fftx, self.binned_fft = ear.get_audio_features()
                 fft_samples += 1
 
-                if self.binned_fft[0] > 10.0:
-                    jump = round(self.binned_fft[1])
+                if self.beat_present(20):
+                    jump = round(self.binned_fft[0])
                     pyautogui.mouseDown()
                     pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump))
                     pyautogui.mouseUp()
