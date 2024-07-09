@@ -18,7 +18,7 @@ class fft_analyzer:
     def run(self):
      
         ear = Stream_Analyzer(
-                        device = 0,                  # Pyaudio (portaudio) device index, defaults to first mic input
+                        device = 4,                  # Pyaudio (portaudio) device index, defaults to first mic input
                         rate   = None,               # Audio samplerate, None uses the default source settings
                         FFT_window_size_ms  = 60,    # Window size used for the FFT transform
                         updates_per_second  = 500,   # How often to read the audio stream for new data
@@ -41,8 +41,7 @@ class fft_analyzer:
                 fft_samples += 1
 
                 if self.beat_present(20):
-                    intensity = round(self.binned_fft[0]) / 10
-                    jump = 10
+                    jump = round(self.binned_fft[0]) 
                     pyautogui.mouseDown()
-                    pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump), duration=intensity)
+                    pyautogui.moveRel(random.randrange(-jump,jump),random.randrange(-jump,jump))
                     pyautogui.mouseUp()
