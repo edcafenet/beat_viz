@@ -6,7 +6,6 @@ import random
 import argparse
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
-
     def handle(self):
         data = self.request[0].strip()
         socket = self.request[1]
@@ -34,6 +33,40 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
 
+class beat_viz:
+    random_increment_x = 0
+    random_increment_y = 0
+    current_mouse_position = [0,0]
+    fft = None
+
+    def __init__(self, fft):
+        self.fft = fft
+
+    def sync_glow(self, bin_id, threshold):
+        if self.fft.beat_present(bin_id, threshold):
+            self.current_mouse_position[0] = pyautogui.position()[0]
+            self.current_mouse_position[1] = pyautogui.position()[1]
+
+            self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
+            self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
+            
+            jump = round(self.fft.get_binned_fft(bin_id)/4)
+            self.random_increment_x = random.randrange(-jump,jump)
+            self.random_increment_y = random.randrange(-jump,jump)
+
+            pyautogui.mouseDown()
+            pyautogui.moveTo(self.current_mouse_position[0] + self.random_increment_x, self.current_mouse_position[1] + self.random_increment_y)
+            pyautogui.mouseUp()
+    
+    def run(self):
+        # Give time to the FFT to load the first samples
+        time.sleep(1)
+
+        # Loop for the viz function
+        while True:
+            self.sync_glow(0,20)
+            time.sleep(0.001)
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', type=int, default=2, dest='device',
@@ -47,18 +80,29 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
-
     args = parse_args()
+
+    # UDP SERVER
     server = ThreadedUDPServer((args.ip, args.port), ThreadedUDPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
-
+    
+    # FFT 
     fft = fft_analyzer(args.device, args.visualizer)
+    fft_thread = threading.Thread(target=fft.run)
+    fft_thread.daemon = True
+
+    # VIZ OBJECT
+    beat = beat_viz(fft)
 
     try:
         server_thread.start()
         print("Server started at {} port {}".format(args.ip, args.port))
-        fft.run()
+        fft_thread.start()
+        print("FFT started")
+        
+        # Run the main loop
+        beat.run()
 
     except (KeyboardInterrupt, SystemExit):
         server.shutdown()
