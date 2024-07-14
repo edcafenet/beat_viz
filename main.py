@@ -6,6 +6,15 @@ import random
 import argparse
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
+
+    def __init__(self, request: socket | tuple[bytes, socket], client_address: socketserver.Any, server: socketserver.BaseServer) -> None:
+        super().__init__(request, client_address, server)
+        self.current_mouse_x = 0
+        self.current_mouse_y = 0
+
+    def get_current_mouse_pos(self):
+        return [self.current_mouse_x, self.current_mouse_y]
+
     def handle(self):
         data = self.request[0].strip()
         socket = self.request[1]
@@ -21,31 +30,27 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         scaling_x = 0.52
         scaling_y = 0.52
 
-        scaled_y = (corrected_y * scaling_y)          
-        scaled_x = (corrected_x * scaling_x)
-
-        scaled_y = scaled_y + 120
-        scaled_x = scaled_x 
-
-        pyautogui.moveTo(scaled_x, scaled_y)
+        self.current_mouse_y = (corrected_y * scaling_y) + 120         
+        self.current_mouse_x = (corrected_x * scaling_x)
+        
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
 
 class beat_viz:
-    random_increment_x = 0
-    random_increment_y = 0
-    current_mouse_position = [0,0]
-    fft = None
-
-    def __init__(self, fft):
+    def __init__(self, udp_server, fft):
         self.fft = fft
+        self.udp_server = udp_server
+        self.random_increment_x = 0
+        self.random_increment_y = 0
+        self.current_mouse_position = [0,0]
 
     def sync_glow(self, bin_id, threshold):
         if self.fft.beat_present(bin_id, threshold):
-            self.current_mouse_position[0] = pyautogui.position()[0]
-            self.current_mouse_position[1] = pyautogui.position()[1]
+            x, y = self.udp_server.get_current_mouse_pos()
+            self.current_mouse_position[0] = x
+            self.current_mouse_position[1] = y
 
             self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
             self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
@@ -93,7 +98,7 @@ if __name__ == "__main__":
     fft_thread.daemon = True
 
     # VIZ OBJECT
-    beat = beat_viz(fft)
+    beat = beat_viz(server, fft)
 
     try:
         server_thread.start()
