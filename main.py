@@ -7,14 +7,6 @@ import argparse
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 
-    def __init__(self, request: socket | tuple[bytes, socket], client_address: socketserver.Any, server: socketserver.BaseServer) -> None:
-        super().__init__(request, client_address, server)
-        self.current_mouse_x = 0
-        self.current_mouse_y = 0
-
-    def get_current_mouse_pos(self):
-        return [self.current_mouse_x, self.current_mouse_y]
-
     def handle(self):
         data = self.request[0].strip()
         socket = self.request[1]
@@ -27,50 +19,20 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         corrected_x = data_int[0] + 225 
         corrected_y = -data_int[1] + 79
 
-        scaling_x = 0.52
-        scaling_y = 0.52
+        scaling_x = 0.521
+        scaling_y = 0.521
 
-        self.current_mouse_y = (corrected_y * scaling_y) + 120         
-        self.current_mouse_x = (corrected_x * scaling_x)
-        
+        scaled_y = (corrected_y * scaling_y)          
+        scaled_x = (corrected_x * scaling_x)
+
+        scaled_y = scaled_y + 120
+        scaled_x = scaled_x 
+
+        pyautogui.moveTo(scaled_x, scaled_y)
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
-
-class beat_viz:
-    def __init__(self, udp_server, fft):
-        self.fft = fft
-        self.udp_server = udp_server
-        self.random_increment_x = 0
-        self.random_increment_y = 0
-        self.current_mouse_position = [0,0]
-
-    def sync_glow(self, bin_id, threshold):
-        if self.fft.beat_present(bin_id, threshold):
-            x, y = self.udp_server.get_current_mouse_pos()
-            self.current_mouse_position[0] = x
-            self.current_mouse_position[1] = y
-
-            self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
-            self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
-            
-            jump = round(self.fft.get_binned_fft(bin_id)/4)
-            self.random_increment_x = random.randrange(-jump,jump)
-            self.random_increment_y = random.randrange(-jump,jump)
-
-            pyautogui.mouseDown()
-            pyautogui.moveTo(self.current_mouse_position[0] + self.random_increment_x, self.current_mouse_position[1] + self.random_increment_y)
-            pyautogui.mouseUp()
-    
-    def run(self):
-        # Give time to the FFT to load the first samples
-        time.sleep(1)
-
-        # Loop for the viz function
-        while True:
-            self.sync_glow(0,20)
-            time.sleep(0.001)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -79,35 +41,24 @@ def parse_args():
     parser.add_argument('--ip', type=str, default="localhost", dest='ip',
                         help='UDP Server IP')
     parser.add_argument('--port', type=int, default=9876, dest='port',
-                        help='UDP Serverr Port')
+                        help='UDP Server Port')
     parser.add_argument('--visualizer', action='store_true')
 
     return parser.parse_args()
 
 if __name__ == "__main__":
-    args = parse_args()
 
-    # UDP SERVER
+    args = parse_args()
     server = ThreadedUDPServer((args.ip, args.port), ThreadedUDPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
-    
-    # FFT 
-    fft = fft_analyzer(args.device, args.visualizer)
-    fft_thread = threading.Thread(target=fft.run)
-    fft_thread.daemon = True
 
-    # VIZ OBJECT
-    beat = beat_viz(server, fft)
+    fft = fft_analyzer(args.device, args.visualizer)
 
     try:
         server_thread.start()
         print("Server started at {} port {}".format(args.ip, args.port))
-        fft_thread.start()
-        print("FFT started")
-        
-        # Run the main loop
-        beat.run()
+        fft.run()
 
     except (KeyboardInterrupt, SystemExit):
         server.shutdown()
