@@ -42,19 +42,36 @@ class fft_analyzer:
         fps = 60  #How often to update the FFT features + display
         last_update = time.time()
         print("All ready, starting audio measurements now...")
+
+        go = None
+        
         while True:
             if (time.time() - last_update) > (1./fps):
                 last_update = time.time()
                 self.raw_fftx, self.raw_fft, self.binned_fftx, self.binned_fft = ear.get_audio_features()
-                
+
                 if self.beat_present(0, 20):
-                    self.current_mouse_position[0] = pyautogui.position()[0]
-                    self.current_mouse_position[1] = pyautogui.position()[1]
+
+                    if self.current_mouse_position[0] <= 25:
+                        go = True
+                    elif self.current_mouse_position[0] > (pyautogui.size()[0] - 25):
+                        go = False
+
+                    jump = round(self.binned_fft[0]/4)
+
+
+                    if go:
+                        self.current_mouse_position[0] += jump
+                    if not go:
+                        self.current_mouse_position[0] -= jump 
+
+                    self.current_mouse_position[1] = 650
+
 
                     self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
                     self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
                     
-                    jump = round(self.binned_fft[0]/4)
+                    
                     self.random_increment_x = random.randrange(-jump,jump)
                     self.random_increment_y = random.randrange(-jump,jump)
 
