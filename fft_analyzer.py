@@ -10,11 +10,16 @@ class fft_analyzer:
     binned_fft = None
     sound_device_index = None
     visualizer = None
-
+    
     random_increment_x = 0
     random_increment_y = 0
     current_mouse_position = [0,0]
 
+    go = None
+    previous_beat = 0
+    current_beat = 0
+    test_update = time.time()
+    
     def __init__(self, sound_device_index, visualizer):
         self.sound_device_index = sound_device_index
         self.visualizer = visualizer
@@ -24,6 +29,46 @@ class fft_analyzer:
             return True
         else:
             return False
+
+    def autonomous_mode(self):
+        self.current_beat = self.binned_fft[0]
+
+        if self.beat_present(0, 20):
+            if self.current_mouse_position[0] <= 25:
+                self.go = True
+            elif self.current_mouse_position[0] > (pyautogui.size()[0] - 25):
+                self.go = False
+
+            jump = round(self.binned_fft[0]/2)
+
+            if self.go:
+                self.current_mouse_position[0] += jump
+            if not self.go:
+                self.current_mouse_position[0] -= jump 
+
+            self.current_mouse_position[1] = 650
+
+            self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
+            self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
+            
+            self.random_increment_x = random.randrange(-jump,jump)
+            self.random_increment_y = random.randrange(-jump,jump)
+
+            pyautogui.mouseDown()
+            pyautogui.moveTo(self.current_mouse_position[0] + self.random_increment_x, self.current_mouse_position[1] + self.random_increment_y)
+            pyautogui.mouseUp()
+
+        # print(self.previous_beat)
+        # print(self.current_beat)
+        # print("--------")
+
+        if round(self.current_beat - self.previous_beat) > 16:
+            pyautogui.press('space') 
+        
+        if (time.time() - self.test_update) > (1./5):
+            self.test_update = time.time()
+            self.previous_beat = self.current_beat
+
 
     def run(self):
         ear = Stream_Analyzer(
@@ -42,39 +87,11 @@ class fft_analyzer:
         fps = 60  #How often to update the FFT features + display
         last_update = time.time()
         print("All ready, starting audio measurements now...")
-
-        go = None
         
         while True:
             if (time.time() - last_update) > (1./fps):
                 last_update = time.time()
                 self.raw_fftx, self.raw_fft, self.binned_fftx, self.binned_fft = ear.get_audio_features()
+                self.autonomous_mode()
 
-                if self.beat_present(0, 20):
-
-                    if self.current_mouse_position[0] <= 25:
-                        go = True
-                    elif self.current_mouse_position[0] > (pyautogui.size()[0] - 25):
-                        go = False
-
-                    jump = round(self.binned_fft[0]/4)
-
-
-                    if go:
-                        self.current_mouse_position[0] += jump
-                    if not go:
-                        self.current_mouse_position[0] -= jump 
-
-                    self.current_mouse_position[1] = 650
-
-
-                    self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment_x
-                    self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment_y
-                    
-                    
-                    self.random_increment_x = random.randrange(-jump,jump)
-                    self.random_increment_y = random.randrange(-jump,jump)
-
-                    pyautogui.mouseDown()
-                    pyautogui.moveTo(self.current_mouse_position[0] + self.random_increment_x, self.current_mouse_position[1] + self.random_increment_y)
-                    pyautogui.mouseUp()
+                
