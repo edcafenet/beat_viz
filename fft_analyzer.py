@@ -1,7 +1,5 @@
 from src.stream_analyzer import Stream_Analyzer
 import time
-import pyautogui
-import random
 
 class fft_analyzer:
     raw_fftx = None
@@ -11,9 +9,10 @@ class fft_analyzer:
     sound_device_index = None
     visualizer = None
     
-    def __init__(self, sound_device_index):
+    def __init__(self, sound_device_index, nbins=8):
         self.sound_device_index = sound_device_index
         self.visualizer = False
+        self.nbins = nbins
 
         self.ear = Stream_Analyzer(
                         device = self.sound_device_index, # Pyaudio (portaudio) device index, defaults to first mic input
@@ -21,7 +20,7 @@ class fft_analyzer:
                         FFT_window_size_ms  = 60,         # Window size used for the FFT transform
                         updates_per_second  = 500,        # How often to read the audio stream for new data
                         smoothing_length_ms = 50,         # Apply some temporal smoothing to reduce noisy features
-                        n_frequency_bins = 8,             # The FFT features are grouped in bins
+                        n_frequency_bins = self.nbins,    # The FFT features are grouped in bins
                         visualize = self.visualizer,      # Visualize the FFT features with PyGame
                         verbose   = 0,                    # Print running statistics (latency, fps, ...)
                         height    = 450,                  # Height, in pixels, of the visualizer window,

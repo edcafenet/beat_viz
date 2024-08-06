@@ -7,9 +7,12 @@ import argparse
 from astar import astar
 import numpy as np
 
+# Position variables 
 x = 0
 y = 0
 z = 0
+
+color = None
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -42,11 +45,8 @@ class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
 class beat_viz():
     def __init__(self, device_id):
         self.fft = fft_analyzer(device_id)
-        
-        for i in range(10):
-            self.fft.run()
-            time.sleep(0.1)
-        
+        self.fft.run()
+                
         self.time_start = time.time()
         self.current_mouse_position = [0,650]
         self.new_mouse_position = [0,0]
@@ -54,18 +54,52 @@ class beat_viz():
     
         self.current_beat = 0
         self.previous_beat = 0
-
         self.threshold = 20
 
+        # A star variables
         self.path_counter = 0
 
         # Direction of the movement
         self.direction_forward = None
 
-    def autonomous_line(self):        
+        global color
+
+    def get_kick(self):
         # Run the FFT and retrieve a value for the first bin
         self.fft.run()
         self.current_beat = self.fft.binned_fft[0]
+
+    def move_mouse(self, jump):
+        # Remove the previous random movement
+        self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment[0]
+        self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment[1]
+
+        # Calculate the next random movement
+        self.random_increment = [random.randrange(-jump,jump), random.randrange(-jump,jump)]
+
+        # Caculate new position
+        self.new_mouse_position = [self.current_mouse_position[0] + self.random_increment[0], self.current_mouse_position[1] + self.random_increment[1]]
+
+        # Move the mouse and click (it seems it is better than drag)
+        pyautogui.mouseDown()
+        pyautogui.moveTo(self.new_mouse_position[0], self.new_mouse_position[1])
+        pyautogui.mouseUp()
+
+        # Update position
+        self.current_mouse_position = self.new_mouse_position
+
+    def drop_splash(self):
+        # If there is a drop press 'space'
+        if round(self.current_beat - self.previous_beat) > self.threshold:
+            pyautogui.press('space') 
+        
+        # Calculate the time window for calculate the drop above
+        if  (time.time() - self.time_start) > (1./5):
+            self.time_start = time.time()
+            self.previous_beat = self.current_beat
+
+    def autonomous_line(self):        
+        self.get_kick()
 
         if self.fft.beat_present(0, self.threshold):
             if self.current_mouse_position[0] <= 25:
@@ -79,37 +113,15 @@ class beat_viz():
                 self.current_mouse_position[0] += jump
             if not self.direction_forward:
                 self.current_mouse_position[0] -= jump 
-
-            # Remove the previous random movement
-            self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment[0]
-            self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment[1]
             
-            # Calculate the next random movement
-            self.random_increment = [random.randrange(-jump,jump), random.randrange(-jump,jump)]
-
-            # Caculate new position
-            self.new_mouse_position = [self.current_mouse_position[0] + self.random_increment[0], self.current_mouse_position[1] + self.random_increment[1]]
-
-            # Move the mouse
-            pyautogui.mouseDown()
-            pyautogui.moveTo(self.new_mouse_position[0], self.new_mouse_position[1])
-            pyautogui.mouseUp()
-
-            # Update position
-            self.current_mouse_position = self.new_mouse_position
-
-        # If there is a drop press 'space'
-        if round(self.current_beat - self.previous_beat) > self.threshold:
-            pyautogui.press('space') 
+            # Update the mouse position according to the jump
+            self.move_mouse(jump)
         
-        # Calculate the time window for calculate the drop above
-        if  (time.time() - self.time_start) > (1./5):
-            self.time_start = time.time()
-            self.previous_beat = self.current_beat
+        # Splash effect for the drop
+        self.drop_splash()
 
     def autonomous_path(self, path):        
-        self.fft.run()
-        self.current_beat = self.fft.binned_fft[0]
+        self.get_kick()
 
         if self.fft.beat_present(0, self.threshold):
             jump = round(self.current_beat/2)
@@ -120,46 +132,34 @@ class beat_viz():
             else:
                 self.path_counter = 0
 
-            # Remove the previous random movement
-            self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment[0]
-            self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment[1]
-            
-            # Calculate the next random movement
-            self.random_increment = [random.randrange(-jump,jump), random.randrange(-jump,jump)]
-
-            # Caculate new position
-            self.new_mouse_position = [self.current_mouse_position[0] + self.random_increment[0], self.current_mouse_position[1] + self.random_increment[1]]
-
-            # Drag the mouse
-            pyautogui.dragTo(self.new_mouse_position[0], self.new_mouse_position[1], button='left')
-
-            # Update position
-            self.current_mouse_position = self.new_mouse_position
-
+            # Update the mouse position according to the jump
+            self.move_mouse(jump)
+        
             # Update counter
             self.path_counter += 1
 
-        # If there is a drop press 'space'
-        if round(self.current_beat - self.previous_beat) > self.threshold:
-            pyautogui.press('space') 
-        
-        # Calculate the time window for calculate the drop above
-        if  (time.time() - self.time_start) > (1./10):
-            self.time_start = time.time()
-            self.previous_beat = self.current_beat
-        
+        # Splash effect for the drop
+        self.drop_splash()
+    
     def run(self):
         grid = np.ones((pyautogui.size()[0], pyautogui.size()[1]))
 
-        for row in range(0, 500):
-            for column in range(500, 1000):
+        # Forbidden space
+        for row in range(0, 400):
+            for column in range(600, 1000):
                 grid[column][row] = 0
 
+        # A star algorithm with the path desired
         a = astar(grid)
+        astar_thread = threading.Thread()
+        astar_thread.daemon = True
+        
         path = a.search([75,200], [75, 650])
         path = path + a.search([75, 650], [1400, 650])
         path = path + a.search([1400, 650], [1400, 200])
         path = path + a.search([1400, 200], [75, 200])
+
+        #global x,y,z
 
         while True:
             self.autonomous_path(path)
@@ -177,11 +177,15 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == "__main__":
+    # Parsing the arguments from command line
     args = parse_args()
+    
+    # UDP Server parameters 
     server = ThreadedUDPServer((args.ip, args.port), ThreadedUDPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
 
+    # Viz object that contains all the different modes
     viz = beat_viz(args.device)
 
     try:

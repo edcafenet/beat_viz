@@ -29,6 +29,8 @@ SOFTWARE.
 const canvas = document.getElementsByTagName('canvas')[0];
 resizeCanvas();
 
+var red, green, blue
+
 let config = {
     SIM_RESOLUTION: 256,
     DYE_RESOLUTION: 1024,
@@ -1536,11 +1538,40 @@ function correctDeltaY (delta) {
 }
 
 function generateColor () {
-    let c = HSVtoRGB(Math.random(), 1.0, 1.0);
-    c.r *= 0.15;
-    c.g *= 0.15;
-    c.b *= 0.15;
-    return c;
+    var promise1 = new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest(),
+        method = "GET",
+        url = "http://127.0.0.1:8000/color";
+
+    xhr.open(method, url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+        resolve(JSON.parse(xhr.responseText));
+        }
+    };
+    xhr.send();
+    });
+
+    promise1.then(function(value) {
+        red = parseInt(value[0])
+        green = parseInt(value[1])
+        blue = parseInt(value[2])
+    });
+
+    let color_hsv = RGBtoHSV(red, green, blue)
+    let h = parseFloat(color_hsv.h/360)
+
+    if(h !== h)
+    {
+        h = 0
+    }
+
+    let color_rgb = HSVtoRGB(h, 1.0, 1.0);
+    color_rgb.r *= 0.15;
+    color_rgb.g *= 0.15;
+    color_rgb.b *= 0.15;
+
+    return color_rgb;
 }
 
 function HSVtoRGB (h, s, v) {
@@ -1564,6 +1595,42 @@ function HSVtoRGB (h, s, v) {
         r,
         g,
         b
+    };
+}
+function RGBtoHSV (r, g, b) {
+    let rabs, gabs, babs, rr, gg, bb, h, s, v, diff, diffc, percentRoundFn;
+    rabs = r / 255;
+    gabs = g / 255;
+    babs = b / 255;
+    v = Math.max(rabs, gabs, babs),
+    diff = v - Math.min(rabs, gabs, babs);
+    diffc = c => (v - c) / 6 / diff + 1 / 2;
+    percentRoundFn = num => Math.round(num * 100) / 100;
+    if (diff == 0) {
+        h = s = 0;
+    } else {
+        s = diff / v;
+        rr = diffc(rabs);
+        gg = diffc(gabs);
+        bb = diffc(babs);
+
+        if (rabs === v) {
+            h = bb - gg;
+        } else if (gabs === v) {
+            h = (1 / 3) + rr - bb;
+        } else if (babs === v) {
+            h = (2 / 3) + gg - rr;
+        }
+        if (h < 0) {
+            h += 1;
+        }else if (h > 1) {
+            h -= 1;
+        }
+    }
+    return {
+        h: Math.round(h * 360),
+        s: percentRoundFn(s * 100),
+        v: percentRoundFn(v * 100)
     };
 }
 
