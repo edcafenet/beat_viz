@@ -146,7 +146,7 @@ class beat_viz():
 
         # Forbidden space
         for row in range(0, 400):
-            for column in range(600, 1000):
+            for column in range(600, 1100):
                 grid[column][row] = 0
 
         # A star algorithm with the path desired

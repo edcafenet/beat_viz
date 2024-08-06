@@ -16,7 +16,7 @@ app = FastAPI()
 #     return parser.parse_args()
 
 # args = parse_args()
-fft = fft_analyzer(0, 9)
+fft = fft_analyzer(3, 18)
 
 @app.get("/color")
 def read_color():
@@ -24,12 +24,12 @@ def read_color():
 
 def db_to_color(fft):
     fft.run()
-    low = fft.binned_fft[0] + fft.binned_fft[1] + fft.binned_fft[2]
-    mid = fft.binned_fft[3] + fft.binned_fft[4] + fft.binned_fft[5]
-    high = fft.binned_fft[6] + fft.binned_fft[7] + fft.binned_fft[8]
+    low = fft.binned_fft[0] + fft.binned_fft[1] + fft.binned_fft[2] + fft.binned_fft[3] + fft.binned_fft[4] + fft.binned_fft[5]
+    mid = fft.binned_fft[6] + fft.binned_fft[7] + fft.binned_fft[8] + fft.binned_fft[9] + fft.binned_fft[10] + fft.binned_fft[11]
+    high = fft.binned_fft[12] + fft.binned_fft[13] + fft.binned_fft[14] + fft.binned_fft[15] + fft.binned_fft[16] + fft.binned_fft[17]
     
-    red = int((low/100)*255)
-    green = int((mid/100)*255)
-    blue = int((high/100)*255)
+    red = int((low/80)*255)
+    green = int((mid/40)*255)
+    blue = int((high/20)*255)
 
     return [red, green, blue]

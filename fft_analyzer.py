@@ -27,7 +27,7 @@ class fft_analyzer:
                         window_ratio = 24/9               # Float ratio of the visualizer window. e.g. 24/9
                         )
 
-        self.fps = 60  #How often to update the FFT features + display
+        self.fps = 60                                     #How often to update the FFT features + display
         self.last_update = time.time()
         print("All ready, starting audio measurements now...")
 
