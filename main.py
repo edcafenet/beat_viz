@@ -13,6 +13,7 @@ y = 0
 z = 0
 
 color = None
+path_to_hand = None
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -29,14 +30,14 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 
         scaling_factor = 0.521
         
-        scaled_y = (corrected_y * scaling_factor)          
-        scaled_x = (corrected_x * scaling_factor)
+        scaled_y = round(corrected_y * scaling_factor)          
+        scaled_x = round(corrected_x * scaling_factor)
 
         global x, y, z
         y = scaled_y + 120
         x = scaled_x 
         z = data_int[2]
- 
+
         socket.sendto(data.upper(), self.client_address)
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):    
@@ -107,7 +108,7 @@ class beat_viz():
             elif self.current_mouse_position[0] > (pyautogui.size()[0] - 25):
                 self.direction_forward = False
 
-            jump = round(self.current_beat/2)
+            jump = round(self.current_beat/3)
 
             if self.direction_forward:
                 self.current_mouse_position[0] += jump
@@ -118,13 +119,13 @@ class beat_viz():
             self.move_mouse(jump)
         
         # Splash effect for the drop
-        self.drop_splash()
+        # self.drop_splash()
 
     def autonomous_path(self, path):        
         self.get_kick()
 
         if self.fft.beat_present(0, self.threshold):
-            jump = round(self.current_beat/2)
+            jump = round(self.current_beat/3)
           
             if self.path_counter < len(path):
                 self.current_mouse_position[0] = path[self.path_counter][0]
@@ -145,24 +146,35 @@ class beat_viz():
         grid = np.ones((pyautogui.size()[0], pyautogui.size()[1]))
 
         # Forbidden space
-        for row in range(0, 400):
-            for column in range(600, 1100):
+        for row in range(0, 450):
+            for column in range(700, 1150):
                 grid[column][row] = 0
 
         # A star algorithm with the path desired
         a = astar(grid)
         astar_thread = threading.Thread()
         astar_thread.daemon = True
+        astar_thread.start()
         
         path = a.search([75,200], [75, 650])
         path = path + a.search([75, 650], [1400, 650])
         path = path + a.search([1400, 650], [1400, 200])
         path = path + a.search([1400, 200], [75, 200])
 
-        #global x,y,z
+        path = path[::2]
+
+        go_to_hand = False
+        first_time = True
 
         while True:
+            if z > 1800 and first_time:
+                first_time = False
+                path = a.search([self.current_mouse_position[0], self.current_mouse_position[1]], [x,y])
+                path = path[::2]
+                self.path_counter = 0
+
             self.autonomous_path(path)
+        
 
 def parse_args():
     parser = argparse.ArgumentParser()
