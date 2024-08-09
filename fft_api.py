@@ -30,7 +30,7 @@ def db_to_color(fft):
     high = fft.binned_fft[6] + fft.binned_fft[7] + fft.binned_fft[8] 
     
     red = int(low*2)
-    green = int(mid*5)
+    green = int(mid*6)
     blue = int(high*8)
 
     if red > 255:
