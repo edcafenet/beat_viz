@@ -3,6 +3,7 @@ import socketserver, threading, time
 from threading import Thread
 from fft_analyzer import fft_analyzer
 import random
+import math
 import argparse
 from astar import astar
 import numpy as np
@@ -89,6 +90,23 @@ class beat_viz():
         # Update position
         self.current_mouse_position = self.new_mouse_position
 
+    def move_mouse_hand(self, jump):
+        # Remove the previous random movement
+        self.current_mouse_position[0] = self.current_mouse_position[0] - self.random_increment[0]
+        self.current_mouse_position[1] = self.current_mouse_position[1] - self.random_increment[1]
+
+        # Calculate the next random movement
+        self.random_increment = [random.randrange(-jump,jump), random.randrange(-jump,jump)]
+
+        # Caculate new position
+        self.new_mouse_position = [self.current_mouse_position[0] + self.random_increment[0], self.current_mouse_position[1] + self.random_increment[1]]
+
+        # Drag behavior
+        pyautogui.dragTo(self.new_mouse_position[0], self.new_mouse_position[1], button='left')
+
+        # Update position
+        self.current_mouse_position = self.new_mouse_position
+
     def drop_splash(self):
         # If there is a drop press 'space'
         if round(self.current_beat - self.previous_beat) > self.threshold:
@@ -140,14 +158,34 @@ class beat_viz():
             self.path_counter += 1
 
         # Splash effect for the drop
-        self.drop_splash()
+        # self.drop_splash()
+
+    def hand_control_trigger(self):
+        if z > 1800:
+            return True
+        else:
+            return False
+
+    def hand_control(self):        
+        self.get_kick()
+
+        if self.fft.beat_present(0, self.threshold):
+            jump = round(self.current_beat/3)
+        
+            self.current_mouse_position[0] = x
+            self.current_mouse_position[1] = y
+            
+            self.move_mouse_hand(jump)
+        
+        # Splash effect for the drop
+        # self.drop_splash()
     
     def run(self):
         grid = np.ones((pyautogui.size()[0], pyautogui.size()[1]))
 
         # Forbidden space
         for row in range(0, 450):
-            for column in range(700, 1150):
+            for column in range(750, 1150):
                 grid[column][row] = 0
 
         # A star algorithm with the path desired
@@ -160,20 +198,43 @@ class beat_viz():
         path = path + a.search([75, 650], [1400, 650])
         path = path + a.search([1400, 650], [1400, 200])
         path = path + a.search([1400, 200], [75, 200])
+        path = path[::3]
 
-        path = path[::2]
+        # Path that will be used later
+        circle_path = path
 
         go_to_hand = False
         first_time = True
+        hand_control = False
 
         while True:
-            if z > 1800 and first_time:
+            if self.hand_control_trigger() and first_time:
                 first_time = False
                 path = a.search([self.current_mouse_position[0], self.current_mouse_position[1]], [x,y])
-                path = path[::2]
+                path = path[::3]
+                go_to_hand = True        
                 self.path_counter = 0
 
-            self.autonomous_path(path)
+            if go_to_hand:
+                if math.dist([self.current_mouse_position[0], self.current_mouse_position[1]], [x,y]) < 75:
+                    hand_control = True
+         
+            if hand_control:
+                self.hand_control()
+
+                if self.hand_control_trigger():
+                    go_to_hand = False
+                    hand_control = False
+                    
+                    path = a.search([x,y], [75, 200])
+                    path = path + circle_path
+                    path = path[::3]
+
+                    self.path_counter = 0
+
+            else:
+                self.autonomous_path(path)
+                first_time = True
         
 
 def parse_args():
