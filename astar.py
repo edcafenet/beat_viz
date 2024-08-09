@@ -19,6 +19,9 @@ class Cell:
         self.h = 0
 
 class astar():
+    
+    daemon_path = None
+    
     def __init__(self, grid):
         # Define the grid
         self.grid = grid
@@ -26,6 +29,9 @@ class astar():
         # Define the size of the grid
         self.ROW = grid.shape[0]
         self.COL = grid.shape[1]
+
+        self.daemon_destination = [0,0]
+        self.daemon_origin = [0,0]
 
     # Check if a cell is valid (within the grid)
     def is_valid(self, row, col):
@@ -151,3 +157,22 @@ class astar():
         # If the destination is not found after visiting all cells
         if not found_dest:
             print("Failed to find the destination cell")
+    
+    def set_daemon_destination(self, destination):
+        self.daemon_destination = destination
+
+    def set_daemon_origin(self, origin):
+        self.daemon_origin = origin    
+
+    def get_daemon_destination(self):
+        return self.daemon_destination
+
+    def get_daemon_origin(self):
+        return self.daemon_origin    
+
+    def daemon_search(self):
+        while True:
+            destination = self.get_daemon_destination()
+            origin = self.get_daemon_origin()
+            astar.daemon_path = self.search(origin, destination)
+            time.sleep(0.1)

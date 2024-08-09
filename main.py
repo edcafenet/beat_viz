@@ -13,7 +13,6 @@ y = 0
 z = 0
 
 color = None
-path_to_hand = None
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -140,7 +139,7 @@ class beat_viz():
             self.path_counter += 1
 
         # Splash effect for the drop
-        self.drop_splash()
+        # self.drop_splash()
     
     def run(self):
         grid = np.ones((pyautogui.size()[0], pyautogui.size()[1]))
@@ -160,21 +159,31 @@ class beat_viz():
         path = path + a.search([75, 650], [1400, 650])
         path = path + a.search([1400, 650], [1400, 200])
         path = path + a.search([1400, 200], [75, 200])
-
         path = path[::2]
 
         go_to_hand = False
-        first_time = True
+
+        # A star algorithm with the path desired
+        b = astar(grid)
+        b_thread = threading.Thread(target=b.daemon_search)
+        b_thread.daemon = True
+        b_thread.start()
 
         while True:
-            if z > 1800 and first_time:
-                first_time = False
-                path = a.search([self.current_mouse_position[0], self.current_mouse_position[1]], [x,y])
-                path = path[::2]
-                self.path_counter = 0
+            b.set_daemon_origin([self.current_mouse_position[0], self.current_mouse_position[1]])
+            b.set_daemon_destination([x,y])
 
-            self.autonomous_path(path)
-        
+            if not go_to_hand:
+                self.autonomous_path(path)
+            else:
+                if b.daemon_path == None:
+                    pass
+                else:
+                    self.autonomous_path(b.daemon_path[::2])
+
+            if z > 1800:
+                go_to_hand = True
+                self.path_counter = 0
 
 def parse_args():
     parser = argparse.ArgumentParser()
