@@ -16,7 +16,7 @@ app = FastAPI()
 #     return parser.parse_args()
 
 # args = parse_args()
-fft = fft_analyzer(3, 9)
+fft = fft_analyzer(2, 9)
 
 @app.get("/color")
 def read_color():

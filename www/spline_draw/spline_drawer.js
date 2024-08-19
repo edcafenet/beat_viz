@@ -77,7 +77,7 @@ while(true) {
 	spline.geometry.setFromPoints( points );
 
 	renderer.render( scene, camera );
-	await sleep(10)
+	await sleep(1)
 }
 
 function clear_scene(){
