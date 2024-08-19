@@ -3,19 +3,20 @@
 # and modulate some device parameters.
 #------------------------------------------------------------------------
 import live
-import random
 
 #------------------------------------------------------------------------
 # Query the set's contents, and set its tempo to 110bpm.
 #------------------------------------------------------------------------
 set = live.Set(scan=True)
-set.tempo = 110.0
 
 #------------------------------------------------------------------------
 # Each Set contains a list of Track objects.
 #------------------------------------------------------------------------
-track = set.tracks[0]
-print("Track name '%s'" % track.name)
+
+for i in range(len(set.tracks)):
+     print(set.tracks[i].name)
+
+# track = set.tracks[0]
 
 #------------------------------------------------------------------------
 # Each Track contains a list of Clip objects.
@@ -27,8 +28,8 @@ print("Track name '%s'" % track.name)
 #------------------------------------------------------------------------
 # Mdulate the parameters of a Device object.
 #------------------------------------------------------------------------
-device = track.devices[0]
-parameter = random.choice(device.parameters)
+# device = track.devices[0]
+#parameter = random.choice(device.parameters)
 
 # for i in range(len(device.parameters)):
 #     print(device.parameters[i])
