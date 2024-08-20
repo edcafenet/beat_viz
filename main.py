@@ -210,7 +210,7 @@ class beat_viz():
             if self.hand_control_trigger() and first_time:
                 first_time = False
                 path = a.search([self.current_mouse_position[0], self.current_mouse_position[1]], [x,y])
-                path = path[::3]
+                path = path[::4]
                 go_to_hand = True        
                 self.path_counter = 0
 

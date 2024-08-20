@@ -19,7 +19,7 @@ app = FastAPI()
 fft = fft_analyzer(2, 9)
 
 @app.get("/color")
-def read_color():
+async def read_color():
     return db_to_color(fft)
 
 def db_to_color(fft):
