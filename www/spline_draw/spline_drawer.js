@@ -18,7 +18,6 @@ window.addEventListener( "resize", (event) => {
 		renderer.render( scene, camera );
 });
 
-
 // next comment
 // create a spline curve and a line to visualize it
 var curve = new THREE.SplineCurve( [] ),
@@ -30,14 +29,35 @@ var curve = new THREE.SplineCurve( [] ),
 scene.add( spline );
 renderer.render( scene, camera);
 
-var x_udp, y_udp, z_udp;
-var t=setInterval(clear_scene,10000);
+var x_umh0, y_umh0, z_umh0;
+var x_umh1, y_umh1, z_umh1;
+//var t=setInterval(clear_scene,10000);
 
 while(true) {
+	var promise0 = new Promise(function(resolve, reject) {
+		var xhr = new XMLHttpRequest(),
+			method = "GET",
+			url = "http://127.0.0.1:8001/pose";
+	
+		xhr.open(method, url, true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+			resolve(JSON.parse(xhr.responseText));
+			}
+		};
+		xhr.send();
+		});
+
+	promise0.then(function(value) {
+        x_umh0 = parseInt(value[0])
+        y_umh0 = parseInt(value[1])
+        z_umh0 = parseInt(value[2])
+    });
+
 	var promise1 = new Promise(function(resolve, reject) {
 		var xhr = new XMLHttpRequest(),
 			method = "GET",
-			url = "http://127.0.0.1:8001/position";
+			url = "http://127.0.0.1:8002/pose";
 	
 		xhr.open(method, url, true);
 		xhr.onreadystatechange = function() {
@@ -49,40 +69,49 @@ while(true) {
 		});
 
 	promise1.then(function(value) {
-        x_udp = parseInt(value[0])
-        y_udp = parseInt(value[1])
-        z_udp = parseInt(value[2])
+		x_umh1 = parseInt(value[0])
+		y_umh1 = parseInt(value[1])
+		z_umh1 = parseInt(value[2])
     });
 
-	// click coordinates
-	var x = parseInt(197 - x_udp), y = parseInt(y_udp/2);
-	// console.log(x, y)
+	if (z_umh1 > 750 && umh1_z < 850)
+	{
+		if (x_umh1 > 450 && x_umh1 < 600)
+		{
+			if (y_umh1 > 160 && y_umh1 < 300)
+			{
+				// click coordinates
+				var x = parseInt(197 - x_umh0), y = parseInt(y_umh0/2);
 
-	// draw a black circle to indicate dot position
-	var point = new THREE.Mesh(
-					new THREE.CircleGeometry( 5 ),
-					new THREE.MeshBasicMaterial( {color: 'yellow' })
-			)
-			point.position.set( x, y, 0 );
-			scene.add( point );
+				// draw a black circle to indicate dot position
+				var point = new THREE.Mesh(
+								new THREE.CircleGeometry( 5 ),
+								new THREE.MeshBasicMaterial( {color: 'yellow' })
+						)
+						point.position.set( x, y, 0 );
+						scene.add( point );
 
-	// add the point to the curve
-	curve.points.push( new THREE.Vector2(x,y) );
-	curve = new THREE.SplineCurve( curve.points );
-	var points = curve.getPoints( 20*curve.points.length );
+				// add the point to the curve
+				curve.points.push( new THREE.Vector2(x,y) );
+				curve = new THREE.SplineCurve( curve.points );
+				var points = curve.getPoints( 20*curve.points.length );
 
-	// regenerate its image
-	spline.geometry.dispose( );
-	spline.geometry = new THREE.BufferGeometry();
-	spline.geometry.setFromPoints( points );
+				// regenerate its image
+				spline.geometry.dispose( );
+				spline.geometry = new THREE.BufferGeometry();
+				spline.geometry.setFromPoints( points );
+
+			}
+		}
+	}
 
 	renderer.render( scene, camera );
 	await sleep(1)
 }
 
-function clear_scene(){
-	location.reload();
-}
+// function clear_scene(){
+// 	location.reload();
+// }
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));

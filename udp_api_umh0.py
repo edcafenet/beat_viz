@@ -38,12 +38,16 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):    
     pass
 
+@app.get("/pose")
+async def read_position():
+    return [x,y,z]
+
 @app.get("/position/{id}")
 async def read_position(id: int):
     return [x,y,z][id]
 
 # UDP Server parameters 
-server = ThreadedUDPServer(('10.205.3.4', 10876), ThreadedUDPRequestHandler)
+server = ThreadedUDPServer(('10.205.3.4', 10877), ThreadedUDPRequestHandler)
 server_thread = threading.Thread(target=server.serve_forever)
 server_thread.daemon = True
 server_thread.start()

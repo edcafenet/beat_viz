@@ -41,7 +41,6 @@ def trigger_eq():
         if umh1_x > 450 and umh1_x < 600:
             if umh1_y > 160 and umh1_y < 300:
                 return True
-    
     return False
 
 def reset_spline():
@@ -51,10 +50,11 @@ def reset_spline():
 
 def trigger_disconnect_eq():
     if umh0_x > umh1_x:
-        return True
+        if umh0_z > 1000 and umh1_z > 1000:
+            return True
     return False
 
-def disconnect_eq():
+def reset_eq():
     for i in range(1,32):
         device.parameters[i].value = 0.5
 
@@ -72,8 +72,9 @@ while (True):
    
     if trigger_eq():
         spline_array_x.append(len(spline_array_x))
-        spline_array_y.append(umh0_y) 
-
+        spline_array_y.append(umh0_y)
+        time.sleep(0.025) 
+        
     else:
         if spline_array_x and spline_array_y and len(spline_array_x) < 93:
             spline_array_x.append(len(spline_array_x))
@@ -81,12 +82,11 @@ while (True):
         
     if len(spline_array_x) == 93:
         fsmooth = spi.InterpolatedUnivariateSpline(spline_array_x, spline_array_y)
-        reset_spline()
-
         for i in range(1,32):
             device.parameters[i].value = fsmooth(i*3)/500
+        reset_spline()
 
     if trigger_disconnect_eq():
-        disconnect_eq()
+        reset_eq()
 
-    time.sleep(0.025)
+    

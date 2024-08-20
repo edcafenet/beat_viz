@@ -38,9 +38,9 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):    
     pass
 
-# @app.get("/position")
-# async def read_position():
-#     return [x, y, z]
+@app.get("/pose")
+async def read_position():
+    return [x,y,z]
 
 @app.get("/position/{id}")
 async def read_position(id: int):
