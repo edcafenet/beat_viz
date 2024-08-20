@@ -6,21 +6,26 @@ import numpy as np
 
 spline_array_x = []
 spline_array_y = []
+spline_array_z = []
 
 umh0_x = 0
 umh0_y = 0
+umh0_z = 0
 
 umh1_x = 0
 umh1_y = 0
 umh1_z = 0
 
 def get_positions():
-    global umh0_x, umh0_y, umh1_x, umh1_y, umh1_z
+    global umh0_x, umh0_y, umh0_z, umh1_x, umh1_y, umh1_z
     response = requests.get("http://127.0.0.1:8001/position/0")
     umh0_x = int(response.content.decode('UTF-8'))
 
     response = requests.get("http://127.0.0.1:8001/position/1")
     umh0_y = int(response.content.decode('UTF-8'))
+
+    response = requests.get("http://127.0.0.1:8001/position/2")
+    umh0_z = int(response.content.decode('UTF-8'))
 
     response = requests.get("http://127.0.0.1:8002/position/0")
     umh1_x = int(response.content.decode('UTF-8'))
@@ -81,8 +86,7 @@ while (True):
         for i in range(1,32):
             device.parameters[i].value = fsmooth(i*3)/500
 
-
     if trigger_disconnect_eq():
         disconnect_eq()
-        
-    time.sleep(0.02)
+
+    time.sleep(0.025)
