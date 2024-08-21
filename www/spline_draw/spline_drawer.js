@@ -31,7 +31,8 @@ renderer.render( scene, camera);
 
 var x_umh0, y_umh0, z_umh0;
 var x_umh1, y_umh1, z_umh1;
-//var t=setInterval(clear_scene,10000);
+
+var drawing;
 
 while(true) {
 	var promise0 = new Promise(function(resolve, reject) {
@@ -74,44 +75,53 @@ while(true) {
 		z_umh1 = parseInt(value[2])
     });
 
-	if (z_umh1 > 750 && umh1_z < 850)
+	if(trigger_eq())
 	{
-		if (x_umh1 > 450 && x_umh1 < 600)
-		{
-			if (y_umh1 > 160 && y_umh1 < 300)
-			{
-				// click coordinates
-				var x = parseInt(197 - x_umh0), y = parseInt(y_umh0/2);
+		// click coordinates
+		var x = parseInt(x_umh0 - 300), y = parseInt(y_umh0 - 300);
 
-				// draw a black circle to indicate dot position
-				var point = new THREE.Mesh(
-								new THREE.CircleGeometry( 5 ),
-								new THREE.MeshBasicMaterial( {color: 'yellow' })
-						)
-						point.position.set( x, y, 0 );
-						scene.add( point );
+		// draw a black circle to indicate dot position
+		var point = new THREE.Mesh(
+						new THREE.CircleGeometry(7),
+						new THREE.MeshBasicMaterial( {color: 'yellow' })
+				)
+				point.position.set( x, y, 0 );
+				scene.add( point );
 
-				// add the point to the curve
-				curve.points.push( new THREE.Vector2(x,y) );
-				curve = new THREE.SplineCurve( curve.points );
-				var points = curve.getPoints( 20*curve.points.length );
+		// add the point to the curve
+		curve.points.push( new THREE.Vector2(x,y) );
+		curve = new THREE.SplineCurve( curve.points );
+		var points = curve.getPoints( 20*curve.points.length );
 
-				// regenerate its image
-				spline.geometry.dispose( );
-				spline.geometry = new THREE.BufferGeometry();
-				spline.geometry.setFromPoints( points );
+		// regenerate its image
+		spline.geometry.dispose( );
+		spline.geometry = new THREE.BufferGeometry();
+		spline.geometry.setFromPoints( points );
 
-			}
-		}
+		drawing = true;
 	}
 
+	if(!trigger_eq() && drawing == true)
+	{
+		clear_scene();
+		drawing = false;
+	}
+		
 	renderer.render( scene, camera );
-	await sleep(1)
+	await sleep(0.01)
 }
 
-// function clear_scene(){
-// 	location.reload();
-// }
+function trigger_eq(){
+	if (z_umh1 > 750 && z_umh1 < 850)
+		if (x_umh1 > 450 && x_umh1 < 600)
+			if (y_umh1 > 160 && y_umh1 < 300)
+				return true;
+	return false;
+}
+
+function clear_scene(){
+	location.reload();
+}
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));

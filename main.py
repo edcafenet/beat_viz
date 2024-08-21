@@ -157,7 +157,7 @@ class beat_viz():
             self.path_counter += 1
 
         # Splash effect for the drop
-        # self.drop_splash()
+        self.drop_splash()
 
     def hand_control_trigger(self):
         if z > 1800:

@@ -68,12 +68,15 @@ device.parameters[0].value = 1
 
 # This loop assumes you have a Live session with one track and the AUGraphicEQ
 while (True):
-    get_positions()
-   
+    try:
+        get_positions()
+    except:
+        pass
+
     if trigger_eq():
         spline_array_x.append(len(spline_array_x))
         spline_array_y.append(umh0_y)
-        time.sleep(0.025) 
+        time.sleep(0.02) 
         
     else:
         if spline_array_x and spline_array_y and len(spline_array_x) < 93:
