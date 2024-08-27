@@ -108,7 +108,7 @@ class beat_viz():
 
     def drop_splash(self):
         # If there is a drop press 'space'
-        if round(self.current_beat - self.previous_beat) > self.threshold:
+        if round(self.current_beat - self.previous_beat) > (self.threshold+5):
             pyautogui.press('space') 
         
         # Calculate the time window for calculate the drop above

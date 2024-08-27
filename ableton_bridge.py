@@ -8,6 +8,8 @@ spline_array_x = []
 spline_array_y = []
 spline_array_z = []
 
+spline_complete = False
+
 umh0_x = 0
 umh0_y = 0
 umh0_z = 0
@@ -43,16 +45,16 @@ def trigger_eq():
                 return True
     return False
 
-def reset_spline():
-    global spline_array_x, spline_array_y
-    spline_array_x = []
-    spline_array_y = []
-
 def trigger_disconnect_eq():
     if umh0_x > umh1_x:
         if umh0_z > 1000 and umh1_z > 1000:
             return True
     return False
+
+def reset_spline():
+    global spline_array_x, spline_array_y
+    spline_array_x = []
+    spline_array_y = []
 
 def reset_eq():
     for i in range(1,32):
@@ -65,31 +67,44 @@ device = track.devices[0]
 
 # Turn on the EQ
 device.parameters[0].value = 1
-
+    
 # This loop assumes you have a Live session with one track and the AUGraphicEQ
 while (True):
     try:
         get_positions()
+    
+    except KeyboardInterrupt:
+        break    
+    
     except:
         pass
 
     if trigger_eq():
-        spline_array_x.append(len(spline_array_x))
-        spline_array_y.append(umh0_y)
-        time.sleep(0.02) 
+        if not spline_complete:
+            spline_array_x.append(len(spline_array_x))
+            spline_array_y.append(umh0_y)
+            time.sleep(0.005) 
         
     else:
-        if spline_array_x and spline_array_y and len(spline_array_x) < 93:
+        if spline_array_x and len(spline_array_x) < 93:
             spline_array_x.append(len(spline_array_x))
             spline_array_y.append(250)
         
     if len(spline_array_x) == 93:
+        spline_complete = True
         fsmooth = spi.InterpolatedUnivariateSpline(spline_array_x, spline_array_y)
+        fsmooth.set_smoothing_factor(0.5)
+        
         for i in range(1,32):
             device.parameters[i].value = fsmooth(i*3)/500
-        reset_spline()
-
+    
     if trigger_disconnect_eq():
         reset_eq()
+        reset_spline()
+        spline_complete = False
 
+    if spline_complete:
+        time.sleep(5)
+        reset_spline()
+        spline_complete = False
     

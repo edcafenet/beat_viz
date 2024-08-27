@@ -30,13 +30,14 @@ const canvas = document.getElementsByTagName('canvas')[0];
 resizeCanvas();
 
 var red, green, blue
+var w
 
 let config = {
-    SIM_RESOLUTION: 128,
+    SIM_RESOLUTION: 64,
     DYE_RESOLUTION: 1024,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 1,
-    VELOCITY_DISSIPATION: 0.2,
+    DENSITY_DISSIPATION: 0.25,
+    VELOCITY_DISSIPATION: 0.25,
     PRESSURE: 0.8,
     PRESSURE_ITERATIONS: 20,
     CURL: 30,
@@ -1259,11 +1260,37 @@ function step (dt) {
     blit(velocity.write);
     velocity.swap();
 
+    var promise1 = new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest(),
+            method = "GET",
+            url = "http://127.0.0.1:8003/position/3";
+    
+        xhr.open(method, url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+            resolve(JSON.parse(xhr.responseText));
+            }
+        };
+        xhr.send();
+        });
+    
+        promise1.then(function(value) {
+            w = value
+        });
+
+    var test = parseFloat(w/360)
+
+    if(Number.isNaN(test))
+        config.DENSITY_DISSIPATION = 0.2
+    else
+        config.DENSITY_DISSIPATION = test
+    
     if (!ext.supportLinearFiltering)
         gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
     gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
     gl.uniform1i(advectionProgram.uniforms.uSource, dye.read.attach(1));
     gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION);
+    
     blit(dye.write);
     dye.swap();
 }
