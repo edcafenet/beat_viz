@@ -30,7 +30,11 @@ const canvas = document.getElementsByTagName('canvas')[0];
 resizeCanvas();
 
 var red, green, blue
-var w
+
+var umh2_w_previous = 0 
+var umh3_w_previous = 0
+var umh2_w = 0 
+var umh3_w = 0 
 
 let config = {
     SIM_RESOLUTION: 64,
@@ -1204,7 +1208,66 @@ function applyInputs () {
     });
 }
 
+function increasing(current, previous)
+{
+    if(current > previous)
+        return true;
+    else
+        return false; 
+}
+
 function step (dt) {
+
+    var promise1 = new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest(),
+            method = "GET",
+            url = "http://127.0.0.1:8003/position/3";
+    
+        xhr.open(method, url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+            resolve(JSON.parse(xhr.responseText));
+            }
+        };
+        xhr.send();
+        });
+    
+        promise1.then(function(value) {
+            umh2_w = value
+        });
+
+    umh2_w = parseFloat(umh2_w/360)
+
+    if(Number.isNaN(umh2_w))
+        config.SPLAT_RADIUS  = 0.25
+    else
+        config.SPLAT_RADIUS  = umh2_w
+
+    var promise2 = new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest(),
+            method = "GET",
+            url = "http://127.0.0.1:8004/position/3";
+    
+        xhr.open(method, url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+            resolve(JSON.parse(xhr.responseText));
+            }
+        };
+        xhr.send();
+        });
+    
+        promise2.then(function(value) {
+            umh3_w = value
+        });
+
+    umh3_w = parseFloat(umh3_w/360)
+
+    if(Number.isNaN(umh3_w))
+        config.DENSITY_DISSIPATION  = 0.5
+    else
+        config.DENSITY_DISSIPATION  = umh3_w
+
     gl.disable(gl.BLEND);
 
     curlProgram.bind();
@@ -1259,32 +1322,7 @@ function step (dt) {
     gl.uniform1f(advectionProgram.uniforms.dissipation, config.VELOCITY_DISSIPATION);
     blit(velocity.write);
     velocity.swap();
-
-    var promise1 = new Promise(function(resolve, reject) {
-        var xhr = new XMLHttpRequest(),
-            method = "GET",
-            url = "http://127.0.0.1:8003/position/3";
-    
-        xhr.open(method, url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-            resolve(JSON.parse(xhr.responseText));
-            }
-        };
-        xhr.send();
-        });
-    
-        promise1.then(function(value) {
-            w = value
-        });
-
-    var test = parseFloat(w/360)
-
-    if(Number.isNaN(test))
-        config.DENSITY_DISSIPATION = 0.2
-    else
-        config.DENSITY_DISSIPATION = test
-    
+   
     if (!ext.supportLinearFiltering)
         gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
     gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
@@ -1293,6 +1331,9 @@ function step (dt) {
     
     blit(dye.write);
     dye.swap();
+
+    umh2_w_previous = umh2_w
+    umh3_w_previous = umh3_w
 }
 
 function render (target) {
