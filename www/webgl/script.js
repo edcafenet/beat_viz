@@ -1208,12 +1208,22 @@ function applyInputs () {
     });
 }
 
+// This function is for clockwise movement
 function increasing(current, previous)
 {
     if(current > previous)
         return true;
-    else
-        return false; 
+  
+    return false;
+}
+
+// This function is for counter clockwise movement
+function decreasing(current, previous)
+{
+    if(current < previous)
+        return true;
+
+    return false;
 }
 
 function step (dt) {
@@ -1236,12 +1246,15 @@ function step (dt) {
             umh2_w = value
         });
 
-    umh2_w = parseFloat(umh2_w/360)
+    umh2_w = parseFloat(umh2_w)
 
     if(Number.isNaN(umh2_w))
         config.SPLAT_RADIUS  = 0.25
     else
-        config.SPLAT_RADIUS  = umh2_w
+        if(increasing(umh2_w, umh2_w_previous))
+            config.SPLAT_RADIUS = config.SPLAT_RADIUS + 0.1;
+        if(decreasing(umh2_w, umh2_w_previous))
+            config.SPLAT_RADIUS = config.SPLAT_RADIUS - 0.1;
 
     var promise2 = new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest(),
@@ -1261,12 +1274,15 @@ function step (dt) {
             umh3_w = value
         });
 
-    umh3_w = parseFloat(umh3_w/360)
+    umh3_w = parseFloat(umh3_w)
 
     if(Number.isNaN(umh3_w))
-        config.DENSITY_DISSIPATION  = 0.5
+        config.DENSITY_DISSIPATION  = 0.25
     else
-        config.DENSITY_DISSIPATION  = umh3_w
+    if(increasing(umh3_w, umh3_w_previous))
+        config.DENSITY_DISSIPATION = config.DENSITY_DISSIPATION + 0.1;
+    if(decreasing(umh3_w, umh3_w_previous))
+        config.DENSITY_DISSIPATION = config.DENSITY_DISSIPATION - 0.1;
 
     gl.disable(gl.BLEND);
 

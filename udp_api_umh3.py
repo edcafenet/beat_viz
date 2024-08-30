@@ -34,8 +34,9 @@ class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
         global x, y, z, w
         y = scaled_y + 120
         x = scaled_x 
-        z = data_int[2]        
-        w = 360 - math.degrees(data_float[3]+math.pi)
+        z = data_int[2]      
+        w = data_float[3]  
+        #w = 360 - math.degrees(data_float[3]+math.pi)
 
         socket.sendto(data.upper(), self.client_address)
 
