@@ -36,6 +36,8 @@ var umh3_w_previous = 0
 var umh2_w = 0 
 var umh3_w = 0 
 
+var changing_splat_radius = 0.25
+
 let config = {
     SIM_RESOLUTION: 64,
     DYE_RESOLUTION: 1024,
@@ -1252,9 +1254,26 @@ function step (dt) {
         config.SPLAT_RADIUS  = 0.25
     else
         if(increasing(umh2_w, umh2_w_previous))
-            config.SPLAT_RADIUS = config.SPLAT_RADIUS + 0.1;
-        if(decreasing(umh2_w, umh2_w_previous))
-            config.SPLAT_RADIUS = config.SPLAT_RADIUS - 0.1;
+        {
+            changing_splat_radius = config.SPLAT_RADIUS
+            changing_splat_radius = changing_splat_radius + 0.01;
+
+            if(changing_splat_radius>= 3.5)
+                changing_splat_radius = 3.5;
+
+            config.SPLAT_RADIUS = changing_splat_radius;
+
+        }
+            if(decreasing(umh2_w, umh2_w_previous))
+        {
+            changing_splat_radius = config.SPLAT_RADIUS
+            changing_splat_radius = changing_splat_radius - 0.01;
+
+            if(changing_splat_radius<= 0.01)
+                changing_splat_radius = 0.01;
+
+            config.SPLAT_RADIUS = changing_splat_radius;
+        }
 
     var promise2 = new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest(),
@@ -1280,9 +1299,9 @@ function step (dt) {
         config.DENSITY_DISSIPATION  = 0.25
     else
     if(increasing(umh3_w, umh3_w_previous))
-        config.DENSITY_DISSIPATION = config.DENSITY_DISSIPATION + 0.1;
+        config.DENSITY_DISSIPATION = config.DENSITY_DISSIPATION + 0.01;
     if(decreasing(umh3_w, umh3_w_previous))
-        config.DENSITY_DISSIPATION = config.DENSITY_DISSIPATION - 0.1;
+        config.DENSITY_DISSIPATION = config.DENSITY_DISSIPATION - 0.01;
 
     gl.disable(gl.BLEND);
 
